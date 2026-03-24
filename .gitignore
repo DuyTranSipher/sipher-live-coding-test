@@ -1,0 +1,16 @@
+# Unreal generated or local-only files
+/.vs
+/.vscode
+/Binaries
+/DerivedDataCache
+/Intermediate
+/Saved
+/\.gitnexus
+/\.idea
+/.ignore
+/*.code-workspace
+/Build/Scripts/obj
+/Plugins/**/Binaries
+/Plugins/**/Intermediate
+
+# Keep plugin/build intermediates out of source control
