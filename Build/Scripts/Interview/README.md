@@ -17,6 +17,12 @@ powershell -ExecutionPolicy Bypass -File ".\Build\Scripts\Interview\Prepare-Inte
   -Force
 ```
 
+Simpler Windows wrapper from the repo root:
+
+```bat
+.\Prepare-InterviewSnapshot.bat -Branch "interview/jr-01-weapon-hit-confirmation" -OutputRoot ".\Saved\InterviewSnapshots" -Force
+```
+
 Export every scenario:
 
 ```powershell
