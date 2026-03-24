@@ -9,18 +9,18 @@
 | Duration | `60 minutes` |
 | Type | `editor/data fix` |
 | Systems | `Weapons`, `InventoryFragment_ReticleConfig`, item definition assets |
-| Main proof | affected weapon shows the expected reticle again |
-| Quick check | active item definition contains a valid `ReticleWidgets` entry |
+| Main proof | the affected weapon shows its full reticle again |
+| Quick check | the affected weapon restores all required reticle assets or widget references, not just one partial layer |
 
 ## Candidate Brief
 
 ### Symptom
 
-Only one weapon has lost its reticle after a recent data update. Other weapons still show their reticles correctly.
+Only one weapon has lost its reticle presentation after a recent HUD asset cleanup. Other weapons still show their reticles correctly, but the affected weapon is now missing more than one reticle layer.
 
 ### Goal
 
-Restore the missing reticle for the affected weapon with the smallest safe fix.
+Restore the missing reticle for the affected weapon with the smallest safe fix. The candidate should restore the full per-weapon reticle setup rather than patching only one visible layer.
 
 ### Constraints
 
@@ -32,20 +32,20 @@ Restore the missing reticle for the affected weapon with the smallest safe fix.
 
 ### Seed
 
-- In the chosen weapon's item definition, clear or replace the `ReticleWidgets` entry from its `UInventoryFragment_ReticleConfig`.
-- Leave [Source/LyraGame/Weapons/InventoryFragment_ReticleConfig.h](/D:/Projects/sipher_test_project/Source/LyraGame/Weapons/InventoryFragment_ReticleConfig.h) unchanged in the default branch.
+- Break the affected weapon's reticle presentation by removing or renaming multiple shotgun reticle assets so existing references resolve to missing content.
+- Leave [Source/LyraGame/Weapons/InventoryFragment_ReticleConfig.h](/D:/Projects/sipher_test_project/Source/LyraGame/Weapons/InventoryFragment_ReticleConfig.h) unchanged in the prepared branch.
 
 ### Expected Fix Shape
 
-- Find the affected weapon item definition.
-- Restore a valid reticle widget class in the fragment config.
+- Find the affected weapon's reticle reference chain.
+- Restore all missing reticle pieces required for that weapon's expected HUD presentation.
 - Confirm other weapons remain unchanged.
 
 ### Likely Search Surface
 
 - [Source/LyraGame/Weapons/InventoryFragment_ReticleConfig.h](/D:/Projects/sipher_test_project/Source/LyraGame/Weapons/InventoryFragment_ReticleConfig.h)
 - [Source/LyraGame/UI/Weapons/LyraReticleWidgetBase.h](/D:/Projects/sipher_test_project/Source/LyraGame/UI/Weapons/LyraReticleWidgetBase.h)
-- weapon item definition assets in `Content/`
+- shotgun reticle assets under [Content/UI/Hud/Art](/D:/Projects/sipher_test_project/Content/UI/Hud/Art)
 
 ### Red Herrings To Ignore
 
@@ -61,15 +61,15 @@ Equip the affected weapon and show that its reticle appears again while unaffect
 
 ### Quick Check
 
-Inspect the item definition asset and show a valid `ReticleWidgets` entry in the `InventoryFragment_ReticleConfig`.
+Inspect the affected weapon's reticle assets or references and show that all required shotgun reticle pieces are valid again.
 
 ## Hint Ladder
 
-- Hint 1: compare the broken weapon's definition with a working one
-- Hint 2: search for the fragment type that stores reticle widget classes
+- Hint 1: compare the broken weapon's HUD asset chain with a working weapon before rewriting code
+- Hint 2: the issue may involve more than one missing reticle asset, not just a single widget class
 
 ## Scoring Notes
 
-- Strong signal: candidate isolates the broken data asset quickly and validates the fix in-game
-- Partial credit: candidate finds the correct fragment but does not finish validation
-- Miss: candidate rewrites reticle rendering code for what is really an asset configuration issue
+- Strong signal: candidate isolates the broken weapon-specific asset chain quickly and validates the full reticle in-game
+- Partial credit: candidate restores one missing layer but leaves the weapon partially broken
+- Miss: candidate rewrites reticle rendering code for what is really an asset/configuration issue

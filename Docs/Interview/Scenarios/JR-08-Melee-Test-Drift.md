@@ -9,18 +9,18 @@
 | Duration | `60 minutes` |
 | Type | `test repair` |
 | Systems | `ShooterTests`, weapon pickup data, editor validation |
-| Main proof | the broken melee case passes again, ideally without weakening the test |
-| Quick check | the affected `WeaponMelee_*` case resolves the correct weapon data and equipped instance |
+| Main proof | the broken melee case passes again, ideally without weakening the test or hiding the helper-level drift |
+| Quick check | the affected `WeaponMelee_*` case resolves the correct weapon data and expected equipped instance through the shared helper |
 
 ## Candidate Brief
 
 ### Symptom
 
-One of the existing melee automation cases has started failing after a weapon data/content update, while the other melee cases still pass.
+One of the existing melee automation cases has started failing after a weapon data/content update, while the other melee cases still pass. The failure now comes from the shared equip helper drifting for only one weapon, not from a single obvious stale line in the test body.
 
 ### Goal
 
-Repair the broken case so the test once again verifies the intended behavior. Do not remove assertions or skip the failing case.
+Repair the broken case so the test once again verifies the intended behavior. Do not remove assertions, skip the failing case, or work around the helper-level drift with a one-off hack in the test body.
 
 ### Constraints
 
@@ -32,18 +32,19 @@ Repair the broken case so the test once again verifies the intended behavior. Do
 
 ### Seed
 
-- Drift one melee case, preferably `WeaponMelee_Shotgun`, by changing the referenced pickup data asset name or expected equipped instance name used in [Plugins/GameFeatures/ShooterTests/Source/ShooterTestsRuntime/Private/ShooterTestsActorAnimationTests.cpp](/D:/Projects/sipher_test_project/Plugins/GameFeatures/ShooterTests/Source/ShooterTestsRuntime/Private/ShooterTestsActorAnimationTests.cpp).
+- Drift one melee case, preferably `WeaponMelee_Shotgun`, by changing the shared helper in [Plugins/GameFeatures/ShooterTests/Source/ShooterTestsRuntime/Private/ShooterTestsActorAnimationTests.cpp](/D:/Projects/sipher_test_project/Plugins/GameFeatures/ShooterTests/Source/ShooterTestsRuntime/Private/ShooterTestsActorAnimationTests.cpp) so it resolves the wrong expected equipped instance name for only that weapon.
 - Keep pistol and rifle cases passing so the failure surface stays narrow.
 
 ### Expected Fix Shape
 
 - Reproduce or inspect the failing melee case.
-- Restore the correct test data reference or lookup expectation.
+- Restore the correct helper-level data/reference expectation for the affected weapon.
 - Keep the assertions intact and avoid loosening the test into a false positive.
 
 ### Likely Search Surface
 
 - [Plugins/GameFeatures/ShooterTests/Source/ShooterTestsRuntime/Private/ShooterTestsActorAnimationTests.cpp](/D:/Projects/sipher_test_project/Plugins/GameFeatures/ShooterTests/Source/ShooterTestsRuntime/Private/ShooterTestsActorAnimationTests.cpp)
+- [ShooterTestsActorTest.h](/D:/Projects/sipher_test_project/Plugins/GameFeatures/ShooterTests/Source/ShooterTestsRuntime/Private/Utilities/ShooterTestsActorTest.h)
 - relevant weapon pickup data assets in `Content/` or plugin content
 
 ### Red Herrings To Ignore
@@ -60,15 +61,15 @@ If time allows, equip the affected weapon in-editor and confirm the melee action
 
 ### Quick Check
 
-Run or target the broken `WeaponMelee_*` case and show it now passes with the correct asset/instance mapping.
+Run or target the broken `WeaponMelee_*` case and show it now passes with the correct helper-level asset/instance mapping.
 
 ## Hint Ladder
 
-- Hint 1: compare the broken melee case against the two passing cases
-- Hint 2: the failure is in test data alignment, not in animation playback logic itself
+- Hint 1: compare the broken melee case against the two passing cases, then inspect the shared helper they all use
+- Hint 2: the failure is in helper-level data alignment, not in animation playback logic itself
 
 ## Scoring Notes
 
-- Strong signal: candidate keeps the test strict and fixes the actual drift
-- Partial credit: candidate finds the stale reference but does not complete the pass/fail proof
+- Strong signal: candidate keeps the test strict and fixes the actual helper-level drift
+- Partial credit: candidate finds the stale reference but patches only the single test body or does not complete the pass/fail proof
 - Miss: candidate comments out assertions, disables the test, or changes unrelated animation code

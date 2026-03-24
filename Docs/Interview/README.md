@@ -14,7 +14,7 @@ This pack turns the Lyra-based project into a reusable interview bank for freshe
 - One branch per scenario in a real git clone
 - Structured candidate brief with visible success criteria
 - Manual proof plus a quick reproducible check for every scenario
-- Default difficulty target: strong junior reaches 60-80% completion in 1 hour
+- Default difficulty target: strong junior reaches 40-60% completion in 1 hour, while an exceptional junior can still finish with disciplined scope control
 
 ## Scenario Index
 
