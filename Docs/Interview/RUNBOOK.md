@@ -13,6 +13,28 @@ Use one seeded scenario branch to evaluate how a junior Unreal engineer investig
 5. Sanity-check that the branch reproduces the issue in under 3 minutes.
 6. Confirm the branch can be restored quickly between candidates.
 
+## Candidate Snapshot Workflow
+
+Do not hand candidates the private authoring repo with the scenario branch history intact.
+
+Instead, export a snapshot from the prepared scenario branch tip:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File ".\Build\Scripts\Interview\Prepare-InterviewSnapshot.ps1" `
+  -Branch "interview/jr-01-weapon-hit-confirmation" `
+  -OutputRoot ".\Saved\InterviewSnapshots" `
+  -Force
+```
+
+Default behavior of the exporter:
+
+- exports only the branch tip, not the authoring git history
+- removes `Docs/Interview` so hints and interviewer notes are not visible
+- writes a candidate-facing root `README.md` describing the issue to solve
+- initializes a fresh one-commit git repo unless `-NoGitInit` is used
+
+If you want plain folders without any git history at all, add `-NoGitInit`.
+
 ## Candidate Environment
 
 - Give the candidate:
