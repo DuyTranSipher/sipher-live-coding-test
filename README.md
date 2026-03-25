@@ -24,7 +24,11 @@ Give the candidate the snapshot, Unreal Editor access, and approved AI tools. Th
 
 See `Docs/Interview/RUNBOOK.md` for session timing, hint policy, and scoring guidance.
 
-### 3. Evaluate the result
+### 3. Candidate submits their work
+
+When the candidate finishes, they run `Finish-LiveCoding.bat` inside their snapshot folder. It prompts for their name, creates a `candidate/<name>` branch in this repository, copies their changes back, and commits. If anything fails, the script rolls back automatically so they can retry.
+
+### 4. Evaluate the result
 
 ```bat
 Evaluate-CandidateSnapshot.bat -SnapshotPath "C:\path\to\candidate\snapshot"
