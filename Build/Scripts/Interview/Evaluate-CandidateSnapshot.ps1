@@ -10,7 +10,7 @@ function Show-Usage {
 		"Usage: Evaluate-CandidateSnapshot.ps1 -SnapshotPath <path>",
 		"",
 		"Evaluates a candidate's interview snapshot against the 10 seeded regressions",
-		"from the interview-master exercise. Reports which regressions were fixed,",
+		"from the main exercise. Reports which regressions were fixed,",
 		"which remain broken, and produces a summary score.",
 		"",
 		"Parameters:",
@@ -18,8 +18,8 @@ function Show-Usage {
 		"  -Help           Show this help message",
 		"",
 		"Examples:",
-		"  Evaluate-CandidateSnapshot.bat -SnapshotPath ""C:\Users\Me\Documents\InterviewSnapshots\interview-master""",
-		"  Evaluate-CandidateSnapshot.bat -SnapshotPath "".\Saved\InterviewSnapshots\interview-master"""
+		"  Evaluate-CandidateSnapshot.bat -SnapshotPath ""C:\Users\Me\Documents\InterviewSnapshots\main""",
+		"  Evaluate-CandidateSnapshot.bat -SnapshotPath "".\Saved\InterviewSnapshots\main"""
 	)
 	$Lines | ForEach-Object { Write-Host $_ }
 }

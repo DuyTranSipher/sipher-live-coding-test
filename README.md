@@ -1,6 +1,6 @@
 # sipher_livecoding_test
 
-Unreal Engine 5.7 Lyra-based project used as a live-coding interview exercise. The `interview-master` branch contains 10 seeded gameplay regressions across multiple subsystems. Candidates receive a clean snapshot and have 60 minutes to investigate, fix, and verify as many as they can using AI-assisted tooling.
+Unreal Engine 5.7 Lyra-based project used as a live-coding interview exercise. The `main` branch contains 10 seeded gameplay regressions across multiple subsystems. Candidates receive a clean snapshot and have 60 minutes to investigate, fix, and verify as many as they can using AI-assisted tooling.
 
 ## Interview Flow
 
@@ -13,7 +13,7 @@ Prepare-InterviewSnapshot.bat
 Run with no arguments for interactive mode, or pass arguments directly:
 
 ```bat
-Prepare-InterviewSnapshot.bat -Branch "interview-master" -Force -GenerateProjectFiles
+Prepare-InterviewSnapshot.bat -Branch "main" -Force -GenerateProjectFiles
 ```
 
 This exports a clean copy of the branch without git history. Hand this folder to the candidate.

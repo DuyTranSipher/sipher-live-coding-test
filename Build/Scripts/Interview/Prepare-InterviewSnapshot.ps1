@@ -37,7 +37,7 @@ function Show-Usage {
 		"  -Force",
 		"",
 		"Examples:",
-		"  Prepare-InterviewSnapshot.bat -Branch ""interview-master"" -GenerateProjectFiles -Force",
+		"  Prepare-InterviewSnapshot.bat -Branch ""main"" -GenerateProjectFiles -Force",
 		"  Prepare-InterviewSnapshot.bat -AllScenarios -OutputRoot "".\\Saved\\InterviewSnapshots"" -Force"
 	)
 

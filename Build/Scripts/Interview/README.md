@@ -1,6 +1,6 @@
 # Interview Snapshot Export
 
-Use `Prepare-InterviewSnapshot.ps1` to build candidate-safe scenario folders from the private interview authoring branches, especially `interview-master`.
+Use `Prepare-InterviewSnapshot.ps1` to build candidate-safe scenario folders from the private interview authoring branches, especially `main`.
 
 What it does:
 - exports a branch tip without `.git` history
@@ -12,7 +12,7 @@ Example:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File ".\Build\Scripts\Interview\Prepare-InterviewSnapshot.ps1" `
-  -Branch "interview-master" `
+  -Branch "main" `
   -OutputRoot ".\Saved\InterviewSnapshots" `
   -Force
 ```
@@ -20,7 +20,7 @@ powershell -ExecutionPolicy Bypass -File ".\Build\Scripts\Interview\Prepare-Inte
 Simpler Windows wrapper from the repo root:
 
 ```bat
-.\Prepare-InterviewSnapshot.bat -Branch "interview-master" -OutputRoot ".\Saved\InterviewSnapshots" -Force
+.\Prepare-InterviewSnapshot.bat -Branch "main" -OutputRoot ".\Saved\InterviewSnapshots" -Force
 ```
 
 Export every scenario:

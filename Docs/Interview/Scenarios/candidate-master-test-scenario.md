@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | ID | `MASTER` |
-| Branch | `interview-master` |
+| Branch | `main` |
 | Duration | `60 minutes` |
 | Type | `AI-orchestrated cross-system recovery` |
 | Systems | `Frontend asset discovery`, `Quick bar`, `Equipment`, `Weapon HUD`, `Combat feedback`, `Character movement`, `ULyraGameplayAbility startup logic`, `Gameplay ability grants`, `Gameplay ability input binding`, `Gameplay ability execution`, `Replication` |

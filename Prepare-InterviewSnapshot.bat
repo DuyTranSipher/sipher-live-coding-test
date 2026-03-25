@@ -7,7 +7,7 @@ set "SCRIPT_PATH=%REPO_ROOT%Build\Scripts\Interview\Prepare-InterviewSnapshot.ps
 set "PS_EXE=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
 set "PS_ARGS=%*"
 set "INTERACTIVE_MODE=0"
-set "BRANCH_NAME=interview-master"
+set "BRANCH_NAME=main"
 for /f %%E in ('echo prompt $E^| cmd') do set "ESC=%%E"
 set "COLOR_HINT=%ESC%[90m"
 set "COLOR_RESET=%ESC%[0m"
@@ -38,7 +38,7 @@ echo.
 echo Branch: %BRANCH_NAME%
 echo.
 echo 1. Export snapshot
-echo !COLOR_HINT!   Create a candidate snapshot from the interview-master branch.!COLOR_RESET!
+echo !COLOR_HINT!   Create a candidate snapshot from the main branch.!COLOR_RESET!
 echo 2. Show help
 echo !COLOR_HINT!   Display command-line usage and examples, then return to this menu.!COLOR_RESET!
 echo 3. Cancel
