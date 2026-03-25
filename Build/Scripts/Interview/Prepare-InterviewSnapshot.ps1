@@ -431,6 +431,10 @@ function New-CandidateReadme {
 		"- Primary proof: $($Scenario.MainProof)",
 		"- Secondary evidence: $($Scenario.QuickCheck)",
 		"",
+		"## When You Are Done",
+		"",
+		"Run ``Finish-LiveCoding.bat`` in this folder. It will ask for your name and automatically submit your work.",
+		"",
 		"## What To Hand Back",
 		"",
 		"- The code or content change needed to resolve the issue.",
@@ -553,6 +557,12 @@ function Export-BranchSnapshot {
 		Remove-Item -Path $SnapshotBat -Force
 	}
 
+	$EvalBat = Join-Path $DestinationPath "Evaluate-CandidateSnapshot.bat"
+	if (Test-Path -Path $EvalBat) {
+		Write-Detail "Removing Evaluate-CandidateSnapshot.bat"
+		Remove-Item -Path $EvalBat -Force
+	}
+
 	if (-not $ShouldKeepInterviewDocs) {
 		$InterviewDocsPath = Join-Path $DestinationPath "Docs\Interview"
 		if (Test-Path -Path $InterviewDocsPath) {
@@ -573,6 +583,10 @@ function Export-BranchSnapshot {
 	Write-Step ("Step {0}/{1}: Write candidate README" -f $StepIndex, $TotalSteps)
 	Write-Detail "Writing candidate README"
 	Set-Content -Path $ReadmePath -Value $CandidateReadme -Encoding utf8
+
+	$SnapshotConfigPath = Join-Path $DestinationPath ".snapshot-config"
+	Write-Detail "Writing snapshot config with source repository path"
+	Set-Content -Path $SnapshotConfigPath -Value ("REPO_ROOT=" + $RepoRoot) -Encoding utf8
 
 	$SnapshotGitPath = Join-Path $DestinationPath ".git"
 	if (Test-Path -Path $SnapshotGitPath) {
