@@ -1,0 +1,35 @@
+# Unreal Engine generated data
+/Binaries/
+/DerivedDataCache/
+/Intermediate/
+/Saved/
+
+# Plugin-generated build artifacts
+/Plugins/**/Binaries/
+/Plugins/**/Intermediate/
+/Plugins/**/RiderLink/
+
+# IDE and OS metadata
+/.idea/
+/.vs/
+/.vscode/
+*.VC.db
+*.VC.opendb
+*.opensdf
+*.opendb
+*.sdf
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.xcodeproj
+.DS_Store
+Thumbs.db
+
+# Local-only Unreal content
+/Content/Developers/
+
+# Common build system noise
+*.uatbuildrecord
+*.xge.xml
