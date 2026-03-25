@@ -586,7 +586,7 @@ function Export-BranchSnapshot {
 
 	$SnapshotConfigPath = Join-Path $DestinationPath ".snapshot-config"
 	Write-Detail "Writing snapshot config with source repository path"
-	Set-Content -Path $SnapshotConfigPath -Value ("REPO_ROOT=" + $RepoRoot) -Encoding utf8
+	[System.IO.File]::WriteAllText($SnapshotConfigPath, ("REPO_ROOT=" + $RepoRoot + "`r`n"), (New-Object System.Text.UTF8Encoding $false))
 
 	$SnapshotGitPath = Join-Path $DestinationPath ".git"
 	if (Test-Path -Path $SnapshotGitPath) {
