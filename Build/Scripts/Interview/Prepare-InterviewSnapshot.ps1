@@ -594,19 +594,41 @@ function Export-BranchSnapshot {
 		$StepIndex += 1
 		Write-Step ("Step {0}/{1}: Create fresh snapshot git repo" -f $StepIndex, $TotalSteps)
 		Write-Detail "Creating fresh snapshot git repository"
-		& git -C $DestinationPath init -b main | Out-Null
-		if ($LASTEXITCODE -ne 0) {
-			throw "git init failed in snapshot folder '$DestinationPath'."
+
+		$GitEnv = @{
+			GIT_LFS_SKIP_SMUDGE = "1"
+		}
+		$OldEnv = @{}
+		foreach ($Key in $GitEnv.Keys) {
+			$OldEnv[$Key] = [Environment]::GetEnvironmentVariable($Key)
+			[Environment]::SetEnvironmentVariable($Key, $GitEnv[$Key])
 		}
 
-		& git -C $DestinationPath add -A
-		if ($LASTEXITCODE -ne 0) {
-			throw "git add failed in snapshot folder '$DestinationPath'."
-		}
+		try {
+			& git -C $DestinationPath init -b main | Out-Null
+			if ($LASTEXITCODE -ne 0) {
+				throw "git init failed in snapshot folder '$DestinationPath'."
+			}
 
-		& git -C $DestinationPath commit -m $InitialCommitMessage | Out-Null
-		if ($LASTEXITCODE -ne 0) {
-			throw "git commit failed in snapshot folder '$DestinationPath'. Ensure git user.name and user.email are configured."
+			& git -C $DestinationPath -c core.autocrlf=false -c core.safecrlf=false add -A
+			if ($LASTEXITCODE -ne 0) {
+				throw "git add failed in snapshot folder '$DestinationPath'."
+			}
+
+			& git -C $DestinationPath commit -m $InitialCommitMessage | Out-Null
+			if ($LASTEXITCODE -ne 0) {
+				throw "git commit failed in snapshot folder '$DestinationPath'. Ensure git user.name and user.email are configured."
+			}
+		}
+		finally {
+			foreach ($Key in $OldEnv.Keys) {
+				if ($null -eq $OldEnv[$Key]) {
+					[Environment]::SetEnvironmentVariable($Key, $null)
+				}
+				else {
+					[Environment]::SetEnvironmentVariable($Key, $OldEnv[$Key])
+				}
+			}
 		}
 	}
 	else {
