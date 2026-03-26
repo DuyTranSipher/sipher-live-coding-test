@@ -74,6 +74,8 @@ echo.
 echo !COLOR_HINT!  Hint: Parent folder where exported snapshot folders will be created.!COLOR_RESET!
 set /p "OUTPUT_ROOT=Output folder [%USERPROFILE%\Documents\InterviewSnapshots]: "
 if not "%OUTPUT_ROOT%"=="" (
+	rem Strip trailing backslash to prevent it from escaping the closing quote in PowerShell
+	if "!OUTPUT_ROOT:~-1!"=="\" set "OUTPUT_ROOT=!OUTPUT_ROOT:~0,-1!"
 	set "PS_ARGS=!PS_ARGS! -OutputRoot ""%OUTPUT_ROOT%"""
 )
 
