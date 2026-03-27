@@ -438,7 +438,7 @@ void ALyraPlayerController::OnStartAutoRun()
 {
 	if (ULyraAbilitySystemComponent* LyraASC = GetLyraAbilitySystemComponent())
 	{
-		LyraASC->SetLooseGameplayTagCount(LyraGameplayTags::Status_AutoRunning, 0);
+		LyraASC->SetLooseGameplayTagCount(LyraGameplayTags::Status_AutoRunning, 1);
 		K2_OnStartAutoRun();
 	}	
 }
@@ -447,7 +447,7 @@ void ALyraPlayerController::OnEndAutoRun()
 {
 	if (ULyraAbilitySystemComponent* LyraASC = GetLyraAbilitySystemComponent())
 	{
-		LyraASC->SetLooseGameplayTagCount(LyraGameplayTags::Status_AutoRunning, 1);
+		LyraASC->SetLooseGameplayTagCount(LyraGameplayTags::Status_AutoRunning, 0);
 		K2_OnEndAutoRun();
 	}
 }
