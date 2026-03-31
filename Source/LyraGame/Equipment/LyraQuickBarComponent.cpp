@@ -172,12 +172,13 @@ void ULyraQuickBarComponent::AddItemToSlot(int32 SlotIndex, ULyraInventoryItemIn
 	{
 		if (Slots[SlotIndex] == nullptr)
 		{
+			Slots[SlotIndex] = Item;
+
 			if (ActiveSlotIndex == INDEX_NONE)
 			{
 				SetActiveSlotIndex(SlotIndex);
 			}
 
-			Slots[SlotIndex] = Item;
 			OnRep_Slots();
 		}
 	}

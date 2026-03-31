@@ -325,7 +325,7 @@ void ULyraHeroComponent::AddAdditionalInputConfig(const ULyraInputConfig* InputC
 		ULyraInputComponent* LyraIC = Pawn->FindComponentByClass<ULyraInputComponent>();
 		if (ensureMsgf(LyraIC, TEXT("Unexpected Input Component class! The Gameplay Abilities will not be bound to their inputs. Change the input component to ULyraInputComponent or a subclass of it.")))
 		{
-			LyraIC->BindAbilityActions(InputConfig, this, &ThisClass::Input_AbilityInputTagReleased, &ThisClass::Input_AbilityInputTagReleased, /*out*/ BindHandles);
+			LyraIC->BindAbilityActions(InputConfig, this, &ThisClass::Input_AbilityInputTagPressed, &ThisClass::Input_AbilityInputTagReleased, /*out*/ BindHandles);
 		}
 	}
 }
