@@ -33,7 +33,3 @@ Thumbs.db
 # Common build system noise
 *.uatbuildrecord
 *.xge.xml
-
-# Interview candidate submission artifacts (written by Finish-LiveCoding.bat during testing)
-/prompt-history/
-/.session-info
