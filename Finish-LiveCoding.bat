@@ -186,6 +186,11 @@ if errorlevel 1 (
 	goto :Rollback
 )
 
+rem Force-add prompt-history even if gitignored on main
+if exist "!PROMPT_HISTORY_DEST!" (
+	git add --force "!PROMPT_HISTORY_DEST!" >nul 2>&1
+)
+
 git commit -m "Interview submission: !CANDIDATE_NAME!" >nul 2>&1
 if errorlevel 1 (
 	echo !COLOR_RED!ERROR: git commit failed.!COLOR_RESET!
