@@ -20,6 +20,8 @@ rem   3 = files copied to repo
 set "ROLLBACK_STAGE=0"
 set "BRANCH_NAME="
 set "ORIGINAL_BRANCH="
+set "CANDIDATE_NAME="
+set "START_TIME="
 
 rem --- Read repo root from .snapshot-config ---
 set "REPO_ROOT="
@@ -45,27 +47,40 @@ if not exist "!REPO_ROOT!\.git" (
 	goto :PauseAndExit
 )
 
-echo !COLOR_CYAN!==========================================!COLOR_RESET!
-echo !COLOR_CYAN! Finish Live Coding Exercise!COLOR_RESET!
-echo !COLOR_CYAN!==========================================!COLOR_RESET!
-echo.
-echo !COLOR_HINT!Snapshot : !SNAPSHOT_DIR!!COLOR_RESET!
-echo !COLOR_HINT!Repository: !REPO_ROOT!!COLOR_RESET!
-echo.
+rem --- Read .session-info written by Start-LiveCoding.bat ---
+set "SESSION_FILE=%SNAPSHOT_DIR%\.session-info"
+if not exist "!SESSION_FILE!" (
+	echo !COLOR_RED!ERROR: .session-info not found.!COLOR_RESET!
+	echo !COLOR_HINT!  Run Start-LiveCoding.bat first to begin your session.!COLOR_RESET!
+	goto :PauseAndExit
+)
 
-:PromptName
-set "CANDIDATE_NAME="
-set /p "CANDIDATE_NAME=Enter your full name (e.g. John Doe): "
+for /f "usebackq tokens=1,* delims==" %%A in ("!SESSION_FILE!") do (
+	if "%%A"=="CANDIDATE_NAME" set "CANDIDATE_NAME=%%B"
+	if "%%A"=="START_TIME"     set "START_TIME=%%B"
+)
+
 if "!CANDIDATE_NAME!"=="" (
-	echo !COLOR_RED!Name is required.!COLOR_RESET!
-	echo.
-	goto :PromptName
+	echo !COLOR_RED!ERROR: Could not read CANDIDATE_NAME from .session-info!COLOR_RESET!
+	goto :PauseAndExit
+)
+if "!START_TIME!"=="" (
+	echo !COLOR_RED!ERROR: Could not read START_TIME from .session-info!COLOR_RESET!
+	goto :PauseAndExit
 )
 
 rem --- Sanitize name for branch: replace spaces with hyphens ---
 set "BRANCH_SUFFIX=!CANDIDATE_NAME: =-!"
 set "BRANCH_NAME=candidate/!BRANCH_SUFFIX!"
 
+echo !COLOR_CYAN!==========================================!COLOR_RESET!
+echo !COLOR_CYAN! Finish Live Coding Exercise!COLOR_RESET!
+echo !COLOR_CYAN!==========================================!COLOR_RESET!
+echo.
+echo !COLOR_HINT!Snapshot  : !SNAPSHOT_DIR!!COLOR_RESET!
+echo !COLOR_HINT!Repository: !REPO_ROOT!!COLOR_RESET!
+echo !COLOR_HINT!Candidate : !CANDIDATE_NAME!!COLOR_RESET!
+echo !COLOR_HINT!Session   : !START_TIME! → now!COLOR_RESET!
 echo.
 
 rem --- Navigate to repository ---
@@ -79,7 +94,7 @@ rem --- Remember current branch so we can restore on failure ---
 for /f "tokens=*" %%B in ('git rev-parse --abbrev-ref HEAD 2^>nul') do set "ORIGINAL_BRANCH=%%B"
 
 rem --- Step 1: Checkout main ---
-echo !COLOR_CYAN!Step 1/3: Creating branch "!BRANCH_NAME!"!COLOR_RESET!
+echo !COLOR_CYAN!Step 1/4: Creating branch "!BRANCH_NAME!"!COLOR_RESET!
 echo.
 
 git checkout main >nul 2>&1
@@ -108,7 +123,7 @@ echo   Branch created successfully.
 
 rem --- Step 2: Copy files ---
 echo.
-echo !COLOR_CYAN!Step 2/3: Copying changes from snapshot...!COLOR_RESET!
+echo !COLOR_CYAN!Step 2/4: Copying changes from snapshot...!COLOR_RESET!
 echo !COLOR_HINT!  This copies your modified files back to the repository.!COLOR_RESET!
 echo.
 
@@ -124,9 +139,45 @@ set "ROLLBACK_STAGE=3"
 
 echo   Files copied successfully.
 
-rem --- Step 3: Stage and commit ---
+rem --- Step 3: Collect Codex prompt history ---
 echo.
-echo !COLOR_CYAN!Step 3/3: Committing your work...!COLOR_RESET!
+echo !COLOR_CYAN!Step 3/4: Collecting Codex prompt history...!COLOR_RESET!
+echo !COLOR_HINT!  Scanning %USERPROFILE%\.codex\sessions for activity since !START_TIME!...!COLOR_RESET!
+echo.
+
+set "CODEX_SESSIONS_SRC=%USERPROFILE%\.codex\sessions"
+set "PROMPT_HISTORY_DEST=!REPO_ROOT!\prompt-history"
+
+if not exist "!CODEX_SESSIONS_SRC!" (
+	echo !COLOR_HINT!  No Codex sessions folder found — skipping prompt history collection.!COLOR_RESET!
+) else (
+	if not exist "!PROMPT_HISTORY_DEST!" mkdir "!PROMPT_HISTORY_DEST!" >nul 2>&1
+
+	rem Use PowerShell to copy only JSONL files modified on or after START_TIME
+	powershell -NoProfile -Command ^
+		"$start = [datetime]::Parse('%START_TIME%', $null, [System.Globalization.DateTimeStyles]::RoundtripKind);" ^
+		"$src   = '%CODEX_SESSIONS_SRC%';" ^
+		"$dest  = '!PROMPT_HISTORY_DEST!';" ^
+		"$files = Get-ChildItem -Path $src -Recurse -Filter '*.jsonl' | Where-Object { $_.LastWriteTimeUtc -ge $start };" ^
+		"if ($files.Count -eq 0) { Write-Host '  No Codex sessions found in the interview window.' -ForegroundColor DarkGray; exit 0 }" ^
+		"foreach ($f in $files) {" ^
+		"  $rel  = $f.FullName.Substring($src.Length).TrimStart('\','/');" ^
+		"  $out  = Join-Path $dest $rel;" ^
+		"  $dir  = Split-Path $out -Parent;" ^
+		"  if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }" ^
+		"  Copy-Item -Path $f.FullName -Destination $out -Force" ^
+		"}" ^
+		"Write-Host ('  Copied {0} session file(s) to prompt-history/.' -f $files.Count) -ForegroundColor DarkGray"
+
+	if errorlevel 1 (
+		echo !COLOR_RED!ERROR: Failed to collect Codex sessions.!COLOR_RESET!
+		goto :Rollback
+	)
+)
+
+rem --- Step 4: Stage and commit ---
+echo.
+echo !COLOR_CYAN!Step 4/4: Committing your work...!COLOR_RESET!
 echo.
 
 git add -A >nul 2>&1
