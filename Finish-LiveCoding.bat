@@ -139,7 +139,7 @@ set "ROLLBACK_STAGE=3"
 
 echo   Files copied successfully.
 
-rem --- Step 3: Collect Codex prompt history ---
+rem --- Step 3: Extract Codex prompt history report ---
 echo.
 echo !COLOR_CYAN!Step 3/4: Collecting Codex prompt history...!COLOR_RESET!
 echo !COLOR_HINT!  Scanning %USERPROFILE%\.codex\sessions for activity since !START_TIME!...!COLOR_RESET!
@@ -151,26 +151,25 @@ set "PROMPT_HISTORY_DEST=!REPO_ROOT!\prompt-history"
 if not exist "!CODEX_SESSIONS_SRC!" (
 	echo !COLOR_HINT!  No Codex sessions folder found — skipping prompt history collection.!COLOR_RESET!
 ) else (
-	if not exist "!PROMPT_HISTORY_DEST!" mkdir "!PROMPT_HISTORY_DEST!" >nul 2>&1
-
-	rem Use PowerShell to copy only JSONL files modified on or after START_TIME
 	powershell -NoProfile -Command ^
-		"$start = [datetime]::Parse('%START_TIME%', $null, [System.Globalization.DateTimeStyles]::RoundtripKind);" ^
-		"$src   = '%CODEX_SESSIONS_SRC%';" ^
-		"$dest  = '!PROMPT_HISTORY_DEST!';" ^
-		"$files = Get-ChildItem -Path $src -Recurse -Filter '*.jsonl' | Where-Object { $_.LastWriteTimeUtc -ge $start };" ^
-		"if ($files.Count -eq 0) { Write-Host '  No Codex sessions found in the interview window.' -ForegroundColor DarkGray; exit 0 }" ^
-		"foreach ($f in $files) {" ^
-		"  $rel  = $f.FullName.Substring($src.Length).TrimStart('\','/');" ^
-		"  $out  = Join-Path $dest $rel;" ^
-		"  $dir  = Split-Path $out -Parent;" ^
-		"  if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }" ^
-		"  Copy-Item -Path $f.FullName -Destination $out -Force" ^
-		"}" ^
-		"Write-Host ('  Copied {0} session file(s) to prompt-history/.' -f $files.Count) -ForegroundColor DarkGray"
+		"$start  = [datetime]::Parse('%START_TIME%', $null, [System.Globalization.DateTimeStyles]::RoundtripKind);" ^
+		"$src    = '%CODEX_SESSIONS_SRC%';" ^
+		"$dest   = '!PROMPT_HISTORY_DEST!';" ^
+		"$name   = '%CANDIDATE_NAME%';" ^
+		"$files  = Get-ChildItem -Path $src -Recurse -Filter '*.jsonl' -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTimeUtc -ge $start };" ^
+		"if (-not $files) { Write-Host '  No Codex sessions found in the interview window.' -ForegroundColor DarkGray; exit 0 };" ^
+		"$msgs = @();" ^
+		"foreach ($f in $files) { foreach ($line in [IO.File]::ReadLines($f.FullName)) { try { $o = $line | ConvertFrom-Json; if ($o.payload.type -eq 'user_message') { $ts = [datetime]::Parse($o.timestamp, $null, [System.Globalization.DateTimeStyles]::RoundtripKind); if ($ts -ge $start) { $msgs += [pscustomobject]@{ T = $ts; M = $o.payload.message } } } } catch {} } };" ^
+		"$msgs = $msgs | Sort-Object T;" ^
+		"if (-not (Test-Path $dest)) { New-Item -ItemType Directory -Path $dest -Force | Out-Null };" ^
+		"$end = [datetime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ');" ^
+		"$out = @('Candidate Prompt History', '========================', ('Candidate : ' + $name), ('Session   : %START_TIME% to ' + $end), ('Prompts   : ' + $msgs.Count), '', '---');" ^
+		"$i = 1; foreach ($m in $msgs) { $out += ''; $out += ('[' + $i + '] ' + $m.T.ToString('yyyy-MM-ddTHH:mm:ssZ')); $out += $m.M; $i++ };" ^
+		"$out | Set-Content -Path (Join-Path $dest 'prompt-history-report.txt') -Encoding UTF8;" ^
+		"Write-Host ('  Wrote ' + $msgs.Count + ' prompt(s) to prompt-history/prompt-history-report.txt') -ForegroundColor DarkGray"
 
 	if errorlevel 1 (
-		echo !COLOR_RED!ERROR: Failed to collect Codex sessions.!COLOR_RESET!
+		echo !COLOR_RED!ERROR: Failed to collect Codex prompt history.!COLOR_RESET!
 		goto :Rollback
 	)
 )
