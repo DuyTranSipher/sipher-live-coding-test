@@ -1,0 +1,144 @@
+# Conversation Transcript
+
+  ## User
+
+  Mở D:\interview-master\main
+
+  ## Assistant
+
+  Hiện mình đã vào đúng thư mục project: D:\interview-master\main.
+
+  Đây có vẻ là một dự án Unreal Engine, với các thư mục chính như Source, Content, Config, Plugins, và file solution sipher_livecoding_test.sln.
+
+  Nếu bạn muốn, bước tiếp theo mình có thể:
+
+  1. mở và đọc cấu trúc Source
+  2. build/chạy project
+  3. tìm file hoặc bug cụ thể trong repo này
+
+  ## User
+
+  1
+
+  ## Assistant
+
+  Trong Source của project này có 2 module chính:
+
+  - LyraGame: module gameplay/runtime chính.
+  - LyraEditor: module hỗ trợ editor/validation/tooling.
+
+  Ngoài ra còn có nhiều target build ở root Source như LyraClient.Target.cs, LyraServer.Target.cs, LyraEditor.Target.cs, cùng các biến thể Steam/EOS, nên project hỗ trợ nhiều kiểu chạy: client, server, editor, online platform variants.
+
+  Kiến trúc LyraGame được chia khá rõ theo feature. Các cụm quan trọng nhất là:
+
+  - AbilitySystem: gameplay abilities, attributes, execution, phase system.
+  - Character: pawn, character, health, movement, hero component.
+  - GameModes: game mode, game state, experience system.
+  - Player: controller, player state, local player, spawning.
+  - Inventory, Equipment, Weapons: hệ item/trang bị/vũ khí.
+  - Input, Camera, UI, Settings: input, camera, HUD/UI, setting screens.
+  - Teams, Interaction, Messages, Feedback, Cosmetics, Audio, Replays, System: các hệ phụ trợ nhưng quan trọng cho gameplay sample.
+
+  Điểm đáng chú ý là đây đúng kiểu sample/boilerplate theo Lyra của Unreal:
+  Source\LyraGame\README.md mô tả nó là một “bootstrapping game” để làm mẫu kiến trúc game có thể mở rộng. File build D:/interview-master/main/Source/LyraGame/LyraGame.Build.cs cũng cho thấy project dùng rất nhiều hệ của Unreal như GameplayAbilities, GameFeatures,
+  ReplicationGraph, CommonUI, EnhancedInput, Niagara.
+
+  Nếu muốn đi tiếp, mình đề xuất đọc theo thứ tự này để vào code nhanh nhất:
+
+  1. D:/interview-master/main/Source/LyraGame/LyraGameModule.cpp
+  2. D:/interview-master/main/Source/LyraGame/GameModes/LyraGameMode.h
+  3. D:/interview-master/main/Source/LyraGame/GameModes/LyraExperienceManagerComponent.h
+  4. D:/interview-master/main/Source/LyraGame/Character/LyraCharacter.h
+  5. D:/interview-master/main/Source/LyraGame/Player/LyraPlayerController.h
+
+  Nếu bạn muốn, mình có thể tiếp tục mở và giải thích “luồng chính của gameplay” từ lúc game start đến lúc spawn character.
+
+  ## User
+
+  Kiểm tra và giải thích logic lobby background được load ở đâu
+
+  ## Assistant
+
+  Logic load lobby background nằm chủ yếu trong asset Blueprint, không nằm trong C++ runtime trực tiếp.
+
+  Luồng đầy đủ là:
+
+  1. Game khởi động vào frontend map
+     D:/interview-master/main/Config/DefaultEngine.ini:58 đặt GameDefaultMap=/Game/System/FrontEnd/Maps/L_LyraFrontEnd.L_LyraFrontEnd, nên khi vào game sẽ load map D:/interview-master/main/Content/System/FrontEnd/Maps/L_LyraFrontEnd.umap.
+  2. Frontend experience nạp component UI
+     D:/interview-master/main/Content/System/FrontEnd/B_LyraFrontEnd_Experience.uasset có bundle Client chứa B_LyraFrontendStateComponent.
+     LyraFrontendStateComponent sau khi experience load xong sẽ push MainScreenClass lên menu layer trong D:/interview-master/main/Source/LyraGame/UI/Frontend/LyraFrontendStateComponent.cpp:67 và D:/interview-master/main/Source/LyraGame/UI/Frontend/
+     LyraFrontendStateComponent.cpp:222.
+  3. Main screen của frontend là widget W_LyraFrontEnd
+     Trong D:/interview-master/main/Content/UI/B_LyraFrontendStateComponent.uasset có reference:
+
+  - MainScreenClass -> /Game/UI/Menu/W_LyraFrontEnd
+  - PressStartScreenClass -> /Game/UI/Menu/W_LyraStartup
+
+  Điều này nghĩa là C++ chỉ hiện màn hình menu; còn background 3D không được load ở đây.
+
+  4. Background thực sự được load trong frontend map qua actor B_LoadRandomLobbyBackground
+     Map D:/interview-master/main/Content/System/FrontEnd/Maps/L_LyraFrontEnd.umap có reference trực tiếp tới D:/interview-master/main/Content/Environments/B_LoadRandomLobbyBackground.uasset.
+     Trong chính blueprint này có description nhúng sẵn:
+
+  This gets a list of all lobby background assets and picks a random one to load as a level instance
+
+  Và trong binary strings của asset này có các node/keyword:
+
+  - AsyncActionLoadPrimaryAsset
+  - LyraLobbyBackground
+  - LoadLevelInstanceBySoftObjectPtr
+  - LevelStreamingLoadedStatus__DelegateSignature
+
+  Nghĩa là blueprint này:
+
+  - query/load các primary asset type LyraLobbyBackground
+  - chọn ngẫu nhiên một asset
+  - đọc BackgroundLevel
+  - stream level đó vào map bằng LoadLevelInstanceBySoftObjectPtr
+
+  5. LyraLobbyBackground chỉ là data asset chứa soft reference tới level
+     D:/interview-master/main/Source/LyraGame/UI/Frontend/LyraLobbyBackground.h:16 định nghĩa ULyraLobbyBackground : UPrimaryDataAsset, với field D:/interview-master/main/Source/LyraGame/UI/Frontend/LyraLobbyBackground.h:23.
+     Asset type này được Asset Manager scan ở D:/interview-master/main/Config/DefaultGame.ini:67.
+
+  Tóm gọn:
+
+  - UI menu được show bởi LyraFrontendStateComponent.
+  - 3D lobby background không load từ C++ frontend component.
+  - Nó được map L_LyraFrontEnd load thông qua actor Blueprint B_LoadRandomLobbyBackground, actor này chọn một LyraLobbyBackground asset rồi stream BackgroundLevel vào level.
+
+  Nếu bạn muốn, mình có thể tiếp tục bóc kỹ hơn B_LoadRandomLobbyBackground để suy ra gần như từng bước node Blueprint của nó từ asset hiện có.
+
+  ## User
+
+  Kiểm tra logic respawn và check tại sao không respawn
+
+  ## Assistant
+
+  Logic respawn trong repo này đang là:
+
+  1. Khi chết, ULyraHealthComponent phát GameplayEvent.Death ở D:/interview-master/main/Source/LyraGame/Character/LyraHealthComponent.cpp:153.
+  2. Death ability nhận event đó, gọi StartDeath() và khi ability kết thúc mới gọi FinishDeath() ở D:/interview-master/main/Source/LyraGame/AbilitySystem/Abilities/LyraGameplayAbility_Death.cpp:32 và D:/interview-master/main/Source/LyraGame/AbilitySystem/Abilities/
+     LyraGameplayAbility_Death.cpp:59.
+  3. ALyraCharacter::OnDeathFinished() chỉ hẹn destroy pawn ở tick kế tiếp, rồi DetachFromControllerPendingDestroy() trong D:/interview-master/main/Source/LyraGame/Character/LyraCharacter.cpp:344 và D:/interview-master/main/Source/LyraGame/Character/LyraCharacter.cpp:379.
+  4. Respawn thật sự chỉ xảy ra nếu có ai đó gọi RestartPlayer(...) hoặc RequestPlayerRestartNextFrame(...) trong D:/interview-master/main/Source/LyraGame/GameModes/LyraGameMode.cpp:469.
+
+  Nguyên nhân chính mình thấy là: hiện tại không có chỗ nào trong source gọi RequestPlayerRestartNextFrame() sau khi player chết. Tìm toàn repo chỉ thấy hàm này được định nghĩa trong game mode và dùng lại khi FailedToRestartPlayer, chứ không có luồng “on death -> request respawn”
+  cho player. Vì vậy player chết xong sẽ bị destroy/unpossess, nhưng không có lệnh respawn tiếp theo nên sẽ không sống lại.
+
+  Điểm quan trọng:
+
+  - ControllerCanRestart() gần như luôn true ở D:/interview-master/main/Source/LyraGame/GameModes/LyraGameMode.cpp:426 và D:/interview-master/main/Source/LyraGame/Player/LyraPlayerSpawningManagerComponent.cpp:153, nên không phải bị chặn bởi điều kiện restart.
+  - ChoosePlayerStart() cũng có fallback random spawn ở D:/interview-master/main/Source/LyraGame/Player/LyraPlayerSpawningManagerComponent.cpp:71, nên nếu map có ALyraPlayerStart thì logic chọn spawn không phải vấn đề đầu tiên.
+  - Nếu map đang dùng APlayerStart thường thay vì ALyraPlayerStart, đó cũng là rủi ro phụ; chính code đã cảnh báo điều này ở D:/interview-master/main/Source/LyraGame/GameModes/LyraWorldSettings.cpp:41.
+
+  Kết luận ngắn:
+
+  - Lý do không respawn khả năng cao nhất: thiếu trigger gọi respawn sau death.
+  - Lý do phụ cần kiểm tra thêm trong map gameplay: phải có ALyraPlayerStart, không chỉ APlayerStart.
+
+  Nếu bạn muốn, mình có thể sửa luôn để player tự respawn sau khi chết, ví dụ:
+
+  - respawn ngay sau OnDeathFinished
+  - respawn sau delay 3 giây
+  - chỉ respawn trong một số experience/map nhất định
