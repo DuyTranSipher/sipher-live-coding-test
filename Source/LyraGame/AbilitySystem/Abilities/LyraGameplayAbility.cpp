@@ -456,7 +456,7 @@ void ULyraGameplayAbility::TryActivateAbilityOnSpawn(const FGameplayAbilityActor
 			const bool bClientShouldActivate = ActorInfo->IsLocallyControlled() && bIsLocalExecution;
 			const bool bServerShouldActivate = ActorInfo->IsNetAuthority() && bIsServerExecution;
 
-			if (bClientShouldActivate && bServerShouldActivate)
+			if (bClientShouldActivate || bServerShouldActivate)
 			{
 				ASC->TryActivateAbility(Spec.Handle);
 			}
