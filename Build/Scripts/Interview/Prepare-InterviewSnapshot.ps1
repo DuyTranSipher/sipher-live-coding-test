@@ -74,6 +74,28 @@ function Resolve-RepoPath {
 	return (Join-Path $RepoRoot $Path)
 }
 
+function Assert-GitLfsAvailable {
+	param([string]$RepoRoot)
+
+	$GitAttributes = Join-Path $RepoRoot ".gitattributes"
+	if (-not (Test-Path -Path $GitAttributes)) {
+		return
+	}
+
+	$Content = Get-Content -Path $GitAttributes -Raw
+	if ($Content -notmatch 'filter=lfs') {
+		return
+	}
+
+	$null = & git lfs version 2>$null
+	if ($LASTEXITCODE -ne 0) {
+		Write-Host "WARNING: This repository uses Git LFS but 'git lfs' is not installed." -ForegroundColor Yellow
+		Write-Host "         Binary assets (.uasset, .umap, etc.) may be exported as LFS pointer files." -ForegroundColor Yellow
+		Write-Host "         Install Git LFS from https://git-lfs.com for full asset support." -ForegroundColor Yellow
+		Write-Host ""
+	}
+}
+
 function Assert-GitRefExists {
 	param(
 		[string]$RepoRoot,
@@ -617,6 +639,23 @@ function Export-BranchSnapshot {
 			throw "git init failed in snapshot folder '$DestinationPath'."
 		}
 
+		$GitUserName = & git -C $DestinationPath config user.name 2>$null
+		if ([string]::IsNullOrWhiteSpace($GitUserName)) {
+			Write-Detail "No git user.name configured — setting local snapshot identity"
+			& git -C $DestinationPath config user.name "Interview Candidate"
+			& git -C $DestinationPath config user.email "candidate@interview.local"
+		}
+
+		$SnapshotGitAttributes = Join-Path $DestinationPath ".gitattributes"
+		if (Test-Path -Path $SnapshotGitAttributes) {
+			$AttribContent = Get-Content -Path $SnapshotGitAttributes -Raw
+			if ($AttribContent -match 'filter=lfs') {
+				Write-Detail "Stripping LFS filter from snapshot .gitattributes"
+				$AttribContent = $AttribContent -replace '\s*filter=lfs', ''
+				Set-Content -Path $SnapshotGitAttributes -Value $AttribContent -Encoding utf8
+			}
+		}
+
 		& git -C $DestinationPath add -A
 		if ($LASTEXITCODE -ne 0) {
 			throw "git add failed in snapshot folder '$DestinationPath'."
@@ -667,6 +706,8 @@ if ($HasBranch -eq $AllScenarios) {
 	Show-Usage
 	exit 64
 }
+
+Assert-GitLfsAvailable -RepoRoot $RepoRoot
 
 $ResolvedOutputRoot = Resolve-RepoPath -Path $OutputRoot -RepoRoot $RepoRoot
 New-Item -Path $ResolvedOutputRoot -ItemType Directory -Force | Out-Null

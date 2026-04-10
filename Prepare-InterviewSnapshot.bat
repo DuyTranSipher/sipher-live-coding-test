@@ -8,9 +8,16 @@ set "PS_EXE=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
 set "PS_ARGS=%*"
 set "INTERACTIVE_MODE=0"
 set "BRANCH_NAME=main"
+set "ESC="
 for /f %%E in ('echo prompt $E^| cmd') do set "ESC=%%E"
-set "COLOR_HINT=%ESC%[90m"
-set "COLOR_RESET=%ESC%[0m"
+if defined ESC if not "!ESC:~1,1!"=="" set "ESC="
+if defined ESC (
+	set "COLOR_HINT=!ESC![90m"
+	set "COLOR_RESET=!ESC![0m"
+) else (
+	set "COLOR_HINT="
+	set "COLOR_RESET="
+)
 
 if "%~1"=="" (
 	set "INTERACTIVE_MODE=1"
@@ -76,7 +83,7 @@ set /p "OUTPUT_ROOT=Output folder [%USERPROFILE%\Documents\InterviewSnapshots]: 
 if not "%OUTPUT_ROOT%"=="" (
 	rem Strip trailing backslash to prevent it from escaping the closing quote in PowerShell
 	if "!OUTPUT_ROOT:~-1!"=="\" set "OUTPUT_ROOT=!OUTPUT_ROOT:~0,-1!"
-	set "PS_ARGS=!PS_ARGS! -OutputRoot ""%OUTPUT_ROOT%"""
+	set "PS_ARGS=!PS_ARGS! -OutputRoot ""!OUTPUT_ROOT!"""
 )
 
 echo !COLOR_HINT!  Hint: Optional custom folder name for this export. Leave empty to use the branch-based default.!COLOR_RESET!
@@ -89,12 +96,6 @@ echo !COLOR_HINT!  Hint: Recommended yes. Allows replacing an existing snapshot 
 set /p "FORCE_OVERWRITE=Replace existing output if needed? [Y/n]: "
 if /I not "%FORCE_OVERWRITE%"=="n" (
 	set "PS_ARGS=!PS_ARGS! -Force"
-)
-
-echo !COLOR_HINT!  Hint: Recommended yes for candidate handoff. This removes git history from the exported snapshot.!COLOR_RESET!
-set /p "NO_GIT_INIT=Skip creating a fresh git repo in the snapshot? [Y/n]: "
-if /I not "%NO_GIT_INIT%"=="n" (
-	set "PS_ARGS=!PS_ARGS! -NoGitInit"
 )
 
 echo !COLOR_HINT!  Hint: Recommended yes if the snapshot should open directly in Rider or Visual Studio. This step may take longer.!COLOR_RESET!
