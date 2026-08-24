@@ -7,7 +7,10 @@ public class LyraEditorTarget : TargetRules
 {
 	public LyraEditorTarget(TargetInfo Target) : base(Target)
 	{
-		DefaultBuildSettings = BuildSettingsVersion.V6;
+		// UE 5.8 uses V7 defaults for the editor target. Keeping the project target
+		// on V6 changes warning policies relative to UnrealEditor and prevents UBT
+		// from using the shared editor build products.
+		DefaultBuildSettings = BuildSettingsVersion.V7;
 
 		Type = TargetType.Editor;
 		ExtraModuleNames.AddRange(new string[] { "LyraGame", "LyraEditor" });

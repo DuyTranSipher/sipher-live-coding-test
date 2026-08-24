@@ -46,6 +46,6 @@ Reports which of the 10 regressions were fixed, still broken, or changed in an u
 
 ## Prerequisites
 
-- Unreal Engine 5.7
+- Unreal Engine 5.8
 - Git LFS (for `.uasset`, `.umap`, and other large binaries)
 - Windows (batch scripts use PowerShell)
