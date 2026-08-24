@@ -641,7 +641,7 @@ function Export-BranchSnapshot {
 
 		$GitUserName = & git -C $DestinationPath config user.name 2>$null
 		if ([string]::IsNullOrWhiteSpace($GitUserName)) {
-			Write-Detail "No git user.name configured — setting local snapshot identity"
+			Write-Detail "No git user.name configured - setting local snapshot identity"
 			& git -C $DestinationPath config user.name "Interview Candidate"
 			& git -C $DestinationPath config user.email "candidate@interview.local"
 		}
