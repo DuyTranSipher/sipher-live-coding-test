@@ -586,7 +586,7 @@ void ALyraCharacter::FastSharedReplication_Implementation(const FSharedRepMoveme
 		{
 			SetIsCrouched(SharedRepMovement.bIsCrouched);
 
-			if (!GetCharacterMovement()->bNetworkMovementModeChanged)
+			if (GetCharacterMovement()->bNetworkMovementModeChanged)
 			{
 				OnRep_IsCrouched();
 			}

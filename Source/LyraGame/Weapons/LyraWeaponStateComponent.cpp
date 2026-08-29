@@ -90,10 +90,8 @@ void ULyraWeaponStateComponent::ClientConfirmTargetData_Implementation(uint16 Un
 
 						LastWeaponDamageScreenLocations.Add(Entry);
 					}
-					if (Entry.bShowAsSuccess)
-					{
-						++HitLocationIndex;
-					}
+
+					++HitLocationIndex;
 				}
 			}
 

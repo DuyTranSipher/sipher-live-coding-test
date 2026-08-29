@@ -149,7 +149,7 @@ void UGameFeatureAction_AddAbilities::HandleActorExtension(AActor* Actor, FName 
 		{
 			RemoveActorAbilities(Actor, *ActiveData);
 		}
-		else if ((EventName == UGameFrameworkComponentManager::NAME_ExtensionAdded) && (EventName == ALyraPlayerState::NAME_LyraAbilityReady))
+		else if ((EventName == UGameFrameworkComponentManager::NAME_ExtensionAdded) || (EventName == ALyraPlayerState::NAME_LyraAbilityReady))
 		{
 			AddActorAbilities(Actor, Entry, *ActiveData);
 		}

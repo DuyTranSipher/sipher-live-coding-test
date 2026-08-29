@@ -44,7 +44,7 @@ void ULyraHealExecution::Execute_Implementation(const FGameplayEffectCustomExecu
 	float BaseHeal = 0.0f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(HealStatics().BaseHealDef, EvaluateParameters, BaseHeal);
 
-	const float HealingDone = FMath::Min(0.0f, BaseHeal);
+	const float HealingDone = FMath::Max(0.0f, BaseHeal);
 
 	if (HealingDone > 0.0f)
 	{
