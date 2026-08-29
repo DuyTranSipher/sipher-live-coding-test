@@ -1,0 +1,10 @@
+I fixed the below bugs
+- the lobby background no longer loads from the intended source, so the frontend opens in a flatter state
+- the first weapon pickup can appear to succeed without becoming the true active or equipped weapon
+- some valid hostile hits lose their confirmation feedback even though the shot should count
+- at least one shared on-spawn ability path no longer starts correctly, so expected interaction-style behavior can fail to come online
+- some game-feature-granted abilities are missing when the actor becomes ready
+- some additional ability-bound inputs behave like the wrong press or release path
+- healing through the gameplay-effect path no longer restores health as expected
+
+I verified the fix 1, 4, 5, 6, 7 by trying reproducing the bug. I started the game and choose Front-End mode for bug number 1, and play the Shooter Test for bugs 4, 5, 6. I haven't yet verified the bug 2, 3 and 7.

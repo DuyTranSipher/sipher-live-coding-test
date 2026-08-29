@@ -1,0 +1,653 @@
+﻿# Full Chat Session History
+Date: 2026-04-10
+Export Time (UTC): 2026-04-10 10:53:58 UTC
+Workspace: C:\Users\Atherlabs\Documents\InterviewSnapshots\main
+Exported by: Codex
+
+---
+
+## Turn 1
+**User:**
+`tell what i should do with this test`
+
+**User provided task context:**
+A long interview brief describing a real gameplay regression bundle to investigate and fix, covering frontend asset discovery, quick bar, equipment, weapon HUD, combat feedback, movement, ULyraGameplayAbility startup logic, gameplay ability grants, gameplay ability input binding, gameplay ability execution, and replication.
+
+**Assistant response:**
+Explained that the task should be treated as a bug triage and root-cause recovery exercise rather than a one-feature implementation task.
+
+Key guidance given:
+- Reproduce and group the regressions by subsystem rather than chasing them as isolated bugs.
+- Grouping suggested:
+  - Frontend asset discovery
+  - Weapon/equipment/HUD/combat feedback
+  - Movement/replication
+  - Gameplay Ability System lifecycle and execution
+- Prioritization suggested:
+  1. equipment / active-weapon ownership path
+  2. shared ability startup / grant path
+  3. input binding press/release path
+  4. heal execution path
+  5. movement replication path
+  6. frontend asset source
+- Emphasized fixing root causes, not visible symptoms.
+- Emphasized runtime validation after each fix.
+- Summarized what success should look like:
+  - lobby background restored
+  - first pickup truly active/equipped
+  - HUD clears on no-weapon
+  - hostile hit feedback preserved after reconciliation
+  - auto-run/crouch behavior restored
+  - on-spawn/shared ability startup restored
+  - game-feature-granted abilities restored
+  - ability-bound input press/release restored
+  - heal gameplay effect restored
+- Reminded that `Finish-LiveCoding.bat` must be run at the end and that prompt history/chat transcripts are part of deliverables.
+
+---
+
+## Turn 2
+**User:**
+`talk in vietnamese`
+
+**Assistant response:**
+Switched to Vietnamese and restated the task approach in Vietnamese.
+
+Main points communicated in Vietnamese:
+- Đây là bài debug nhiều regression liên quan nhau, không phải làm tính năng mới.
+- Họ chấm cách chia vấn đề, tìm đúng root cause, sửa gọn/an toàn, và chứng minh bằng runtime.
+- Chia bug theo nhóm:
+  - Frontend asset
+  - Weapon / Equipment / HUD
+  - Combat feedback
+  - Movement / Replication
+  - Gameplay Ability System
+- Gợi ý thứ tự ưu tiên:
+  1. Equipment / active weapon ownership
+  2. Ability startup / grant path
+  3. Ability input routing
+  4. Heal execution
+  5. Movement / crouch replication
+  6. Frontend background
+- Nhấn mạnh: sửa ít nhưng đúng contract, không sửa lung tung.
+- Xác minh bằng chạy game thật sau mỗi fix quan trọng.
+
+---
+
+## Turn 3
+**User:**
+`hay tom tat de hieu hon`
+
+**Assistant response:**
+Gave a simpler Vietnamese summary.
+
+Summary given:
+- Đây là project Unreal bị vỡ nhiều chỗ cùng lúc.
+- Nhiệm vụ là:
+  - tìm bug thật
+  - sửa đúng nguyên nhân
+  - ưu tiên bug quan trọng nếu không kịp
+  - chứng minh bằng chạy thử
+- Chia 4 nhóm bug:
+  1. Giao diện: background lobby không hiện đúng
+  2. Weapon / HUD / combat:
+     - nhặt súng đầu tiên nhưng chưa thật sự cầm
+     - bỏ súng HUD không clear
+     - hit feedback hợp lệ bị mất
+  3. Movement / multiplayer:
+     - auto-run sai
+     - crouch remote hiển thị sai
+  4. Ability / heal:
+     - on-spawn ability không tự chạy đúng
+     - game-feature ability grant thiếu
+     - press/release input sai logic
+     - heal không hồi máu đúng
+- Cách đúng: chia nhóm, tìm state flow, sửa root cause, test lại.
+- Cách sai: sửa lung tung, đoán mò, chưa test mà nói xong.
+- Nếu thiếu thời gian, vẫn có thể được điểm tốt nếu chọn đúng bug quan trọng, fix gọn, giải thích rõ phần còn lại.
+
+---
+
+## Turn 4
+**User:**
+`xac dinh xem frontend toi can chay o dau`
+
+**Assistant response:**
+Investigated project config and identified the frontend map and relevant assets.
+
+Exact findings communicated:
+- Frontend map:
+  - `/Game/System/FrontEnd/Maps/L_LyraFrontEnd`
+  - file: `Content/System/FrontEnd/Maps/L_LyraFrontEnd.umap`
+- Frontend experience asset:
+  - `Content/System/FrontEnd/B_LyraFrontEnd_Experience.uasset`
+- Config findings:
+  - `GameDefaultMap=/Game/System/FrontEnd/Maps/L_LyraFrontEnd`
+  - `EditorStartupMap=/Game/System/DefaultEditorMap/L_DefaultEditorOverview`
+- Explained that frontend debugging should be done by opening `L_LyraFrontEnd`, and that Play Standalone is likely preferable because editor code forces standalone net mode for frontend situations.
+- Noted that the likely lobby background bug should be investigated by following frontend map -> experience -> lobby background source.
+
+---
+
+## Turn 5
+**User:**
+`vay la toi nen de map start up cua editor la LyraFrontEnd phai khong`
+
+**Assistant response:**
+Clarified that for frontend debugging it is fine to open `L_LyraFrontEnd`, but changing the Editor Startup Map is optional.
+
+Main answer:
+- Yes, for convenience you can set editor startup map to `L_LyraFrontEnd`.
+- But it is not required.
+- The safer and more task-focused approach is just:
+  1. open project
+  2. open `L_LyraFrontEnd`
+  3. Play there
+- Emphasized that changing startup map does not fix the bug; it only saves time navigating.
+
+---
+
+## Turn 6
+**User:**
+`hay tim xem cho nhan input o dau trong project`
+
+**Assistant response:**
+Inspected the input pipeline and explained where gameplay input is received and bound.
+
+Detailed findings:
+1. **Input config entry point**
+   - `Config/DefaultInput.ini`
+   - Found:
+     - `DefaultPlayerInputClass=/Script/LyraGame.LyraPlayerInput`
+     - `DefaultInputComponentClass=/Script/LyraGame.LyraInputComponent`
+     - `bUseEnhancedInput=True`
+2. **Character setup handoff**
+   - `Source/LyraGame/Character/LyraCharacter.cpp`
+   - `ALyraCharacter::SetupPlayerInputComponent(...)`
+   - It forwards setup to `PawnExtComponent->SetupPlayerInputComponent()`.
+3. **Main gameplay input binding**
+   - `Source/LyraGame/Character/LyraHeroComponent.cpp`
+   - In input init path it:
+     - gets `InputConfig` from `PawnData`
+     - adds mapping contexts
+     - binds ability actions
+     - binds native Move / Look / Crouch / AutoRun
+4. **InputAction -> GameplayTag binding layer**
+   - `Source/LyraGame/Input/LyraInputComponent.h`
+   - Functions:
+     - `BindNativeAction(...)`
+     - `BindAbilityActions(...)`
+   - Ability actions bind:
+     - `Triggered` -> pressed callback
+     - `Completed` -> released callback
+5. **GAS input handling**
+   - `Source/LyraGame/AbilitySystem/LyraAbilitySystemComponent.cpp`
+   - Functions:
+     - `AbilityInputTagPressed(...)`
+     - `AbilityInputTagReleased(...)`
+     - `ProcessAbilityInput(...)`
+
+Most important bug flagged during this step:
+- In `ULyraHeroComponent::AddAdditionalInputConfig(...)` the call was:
+  ```cpp
+  LyraIC->BindAbilityActions(InputConfig, this, &ThisClass::Input_AbilityInputTagReleased, &ThisClass::Input_AbilityInputTagReleased, /*out*/ BindHandles);
+  ```
+- This means pressed and released both go to the Released path.
+- I identified this as a likely root cause for the regression:
+  "some additional ability-bound inputs behave like the wrong press or release path"
+- Suggested intended fix:
+  - pressed -> `Input_AbilityInputTagPressed`
+  - released -> `Input_AbilityInputTagReleased`
+
+---
+
+## Turn 7
+**User:**
+`hay cho toi biet duong dan day du`
+
+**Assistant response:**
+Provided full file paths for input-related files.
+
+Paths provided:
+- `C:\Users\Atherlabs\Documents\InterviewSnapshots\main\Config\DefaultInput.ini`
+- `C:\Users\Atherlabs\Documents\InterviewSnapshots\main\Source\LyraGame\Character\LyraCharacter.cpp`
+- `C:\Users\Atherlabs\Documents\InterviewSnapshots\main\Source\LyraGame\Character\LyraCharacter.h`
+- `C:\Users\Atherlabs\Documents\InterviewSnapshots\main\Source\LyraGame\Character\LyraHeroComponent.cpp`
+- `C:\Users\Atherlabs\Documents\InterviewSnapshots\main\Source\LyraGame\Character\LyraHeroComponent.h`
+- `C:\Users\Atherlabs\Documents\InterviewSnapshots\main\Source\LyraGame\Input\LyraInputComponent.h`
+- `C:\Users\Atherlabs\Documents\InterviewSnapshots\main\Source\LyraGame\Input\LyraInputComponent.cpp`
+- `C:\Users\Atherlabs\Documents\InterviewSnapshots\main\Source\LyraGame\Input\LyraPlayerInput.h`
+- `C:\Users\Atherlabs\Documents\InterviewSnapshots\main\Source\LyraGame\Input\LyraPlayerInput.cpp`
+- `C:\Users\Atherlabs\Documents\InterviewSnapshots\main\Source\LyraGame\AbilitySystem\LyraAbilitySystemComponent.cpp`
+- `C:\Users\Atherlabs\Documents\InterviewSnapshots\main\Source\LyraGame\AbilitySystem\LyraAbilitySystemComponent.h`
+- `C:\Users\Atherlabs\Documents\InterviewSnapshots\main\Source\LyraGame\Input\LyraInputConfig.h`
+- `C:\Users\Atherlabs\Documents\InterviewSnapshots\main\Source\LyraGame\Input\LyraInputConfig.cpp`
+
+Highlighted `LyraHeroComponent.cpp` as the most important one for the input regression.
+
+---
+
+## Turn 8
+**User:**
+`hay chi toi ham nao trong file bi loi`
+
+**Assistant response:**
+Pointed to the exact function and explained the bug.
+
+File:
+- `Source/LyraGame/Character/LyraHeroComponent.cpp`
+
+Function identified:
+- `ULyraHeroComponent::AddAdditionalInputConfig(const ULyraInputConfig* InputConfig)`
+
+Problem described:
+- It binds both press and release to `Input_AbilityInputTagReleased`.
+- Therefore additional input-config abilities behave like release events even on press.
+
+Suggested intended binding:
+```cpp
+LyraIC->BindAbilityActions(InputConfig, this, &ThisClass::Input_AbilityInputTagPressed, &ThisClass::Input_AbilityInputTagReleased, /*out*/ BindHandles);
+```
+
+Also advised comparing this function against `InitializePlayerInput(...)` in the same file, where default input binding is done correctly.
+
+---
+
+## Turn 9
+**User:**
+`chi toi cach verify bug`
+
+**Assistant response:**
+Explained how to verify the additional input press/release bug.
+
+Verification suggestions:
+1. Put breakpoints in:
+   - `ULyraHeroComponent::AddAdditionalInputConfig(...)`
+   - `Input_AbilityInputTagPressed(FGameplayTag)`
+   - `Input_AbilityInputTagReleased(FGameplayTag)`
+2. Enter a gameplay situation where an additional input config is added.
+3. Press and release the relevant ability-bound input.
+4. Before fix, expected bad behavior:
+   - pressing enters Released path
+   - releasing also enters Released path
+5. After fix, expected correct behavior:
+   - pressing enters Pressed path
+   - releasing enters Released path
+6. Optional deeper verification:
+   - also breakpoint in GAS:
+     - `AbilityInputTagPressed(...)`
+     - `AbilityInputTagReleased(...)`
+7. Alternative verify via logs instead of breakpoints.
+8. Alternative verify via gameplay behavior of hold/charge/confirm abilities.
+
+---
+
+## Turn 10
+**User:**
+`tim cho toi loi nay some game-feature-granted abilities are missing when the actor becomes ready`
+
+**Assistant response:**
+Investigated GameFeature ability granting and found a likely root cause in the ready-event handling.
+
+File identified:
+- `Source/LyraGame/GameFeatures/GameFeatureAction_AddAbilities.cpp`
+
+Function:
+- `UGameFeatureAction_AddAbilities::HandleActorExtension(...)`
+
+Problematic condition found:
+```cpp
+else if ((EventName == UGameFrameworkComponentManager::NAME_ExtensionAdded) && (EventName == ALyraPlayerState::NAME_LyraAbilityReady))
+{
+    AddActorAbilities(Actor, Entry, *ActiveData);
+}
+```
+
+Why this is wrong:
+- `EventName` is a single value.
+- It cannot be equal to both names at once.
+- Therefore this condition is impossible and the grant path never fires on `LyraAbilitiesReady`.
+
+Supporting path discovered:
+- `ALyraPlayerState::SetPawnData(...)` sends:
+  ```cpp
+  UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(this, NAME_LyraAbilityReady);
+  ```
+
+Likely intended fix suggested:
+```cpp
+else if ((EventName == UGameFrameworkComponentManager::NAME_ExtensionAdded) || (EventName == ALyraPlayerState::NAME_LyraAbilityReady))
+{
+    AddActorAbilities(Actor, Entry, *ActiveData);
+}
+```
+
+Also noted a possible second issue to check later in the same file:
+- `GrantedAbilitySets` were accessed with `SetPtr.Get()` rather than an explicit synchronous load, but the impossible `&&` condition was the clearest root cause.
+
+---
+
+## Turn 11
+**User:**
+`tim cho toi loi nay some valid hostile hits lose their confirmation feedback even though the shot should count`
+
+**Assistant response:**
+Traced ranged hit confirm / reconcile logic and found a likely indexing bug.
+
+File identified:
+- `Source/LyraGame/Weapons/LyraWeaponStateComponent.cpp`
+
+Function:
+- `ULyraWeaponStateComponent::ClientConfirmTargetData_Implementation(...)`
+
+Problem explained:
+- `HitReplaces` from the server is indexed relative to the full target data list.
+- But the client code was comparing against an index that only advanced for `Entry.bShowAsSuccess` hits.
+
+Problematic logic described:
+```cpp
+int32 HitLocationIndex = 0;
+for (const FLyraScreenSpaceHitLocation& Entry : Batch.Markers)
+{
+    if (!HitReplaces.Contains(HitLocationIndex) && Entry.bShowAsSuccess)
+    {
+        ...
+    }
+    if (Entry.bShowAsSuccess)
+    {
+        ++HitLocationIndex;
+    }
+}
+```
+
+Why this is wrong:
+- Marker array includes all hits (geometry + hostile etc.).
+- Index only increments for success hits.
+- Therefore indices go out of alignment.
+- If an invalid geometry hit comes before a valid hostile hit, the hostile hit can be removed incorrectly.
+
+Suggested correct direction:
+- Compare `HitReplaces` against the full marker index, not the success-only index.
+
+This matched the user’s bug description that valid hostile hits lose confirmation feedback even though the shot still counts.
+
+---
+
+## Turn 12
+**User:**
+`xem gium toi chay level nao can chay de test gameplay logic`
+
+**Assistant response:**
+Inspected maps and config to identify gameplay test levels.
+
+Main recommendation:
+- Use `/ShooterMaps/Maps/L_Expanse`
+- File:
+  `Plugins/GameFeatures/ShooterMaps/Content/Maps/L_Expanse.umap`
+
+Why:
+- It appears in config as a common editor map.
+- It appears in `MapsToPIETest`.
+- It is appropriate for weapon, combat, movement, ability, and multiplayer logic testing.
+
+Also noted a secondary focused map:
+- `/ShooterMaps/Maps/L_FiringRange_WP`
+- Useful for more focused weapon/combat/heal checks.
+
+Restated division:
+- Frontend testing -> `L_LyraFrontEnd`
+- Gameplay testing -> `L_Expanse`
+
+---
+
+## Turn 13
+**User:**
+`xem cho toi loi nay o dau the first weapon pickup can appear to succeed without becoming the true active or equipped weapon`
+
+**Assistant response:**
+Traced pickup -> quickbar -> equip flow and found a likely first-pickup ordering bug.
+
+File identified:
+- `Source/LyraGame/Equipment/LyraQuickBarComponent.cpp`
+
+Function identified:
+- `ULyraQuickBarComponent::AddItemToSlot(int32 SlotIndex, ULyraInventoryItemInstance* Item)`
+
+Problematic order described:
+```cpp
+if (Slots[SlotIndex] == nullptr)
+{
+    if (ActiveSlotIndex == INDEX_NONE)
+    {
+        SetActiveSlotIndex(SlotIndex);
+    }
+
+    Slots[SlotIndex] = Item;
+    OnRep_Slots();
+}
+```
+
+Why this is wrong:
+- On first pickup, `ActiveSlotIndex == INDEX_NONE`.
+- It calls `SetActiveSlotIndex(SlotIndex)` before the slot actually contains the item.
+- `SetActiveSlotIndex(...)` calls `EquipItemInSlot()`.
+- `EquipItemInSlot()` reads `Slots[ActiveSlotIndex]`.
+- At that moment, slot is still empty.
+- Therefore nothing is truly equipped.
+- Afterwards the slot gets the item, so it can look like pickup succeeded without actually becoming the true active/equipped weapon.
+
+Suggested intended order:
+- Put item into slot first.
+- Then set active slot if no active slot existed.
+
+---
+
+## Turn 14
+**User:**
+`tim cho toi loi nay healing through the gameplay-effect path no longer restores health as expected`
+
+**Assistant response:**
+Traced heal execution and found a sign/clamp bug.
+
+File identified:
+- `Source/LyraGame/AbilitySystem/Executions/LyraHealExecution.cpp`
+
+Function:
+- `ULyraHealExecution::Execute_Implementation(...)`
+
+Bad line identified:
+```cpp
+const float HealingDone = FMath::Min(0.0f, BaseHeal);
+```
+
+Why this is wrong:
+- If `BaseHeal > 0`, this returns `0`.
+- If `BaseHeal < 0`, this returns a negative number.
+- Then code only applies healing if `HealingDone > 0.0f`.
+- Therefore heal never applies properly.
+
+Suggested intended fix:
+```cpp
+const float HealingDone = FMath::Max(0.0f, BaseHeal);
+```
+
+Also compared it with damage execution, which correctly clamps positive damage using `FMath::Max(..., 0.0f)`.
+
+---
+
+## Turn 15
+**User:**
+`cho toi biet level ma toi co the test gameplay dang chay pawn nao va toi nen set pawn nao de chay dung`
+
+**Assistant response:**
+Explained gameplay pawn selection path and what pawn data is appropriate.
+
+Detailed explanation:
+- Gameplay test map should still be `L_Expanse`.
+- Gameplay pawn is selected by:
+  - Experience -> PawnData -> PawnClass
+- Relevant code path described:
+  - `ALyraGameMode::GetPawnDataForController(...)`
+  - `ALyraGameMode::GetDefaultPawnClassForController_Implementation(...)`
+  - `ALyraGameMode::SpawnDefaultPawnAtTransform_Implementation(...)`
+- Warned against relying on global fallback:
+  - `DefaultPawnData=/Game/Characters/Heroes/EmptyPawnData/DefaultPawnData_EmptyPawn`
+- Explained that `DefaultPawnData_EmptyPawn` is suitable as a fallback / frontend / empty-state asset, not the right gameplay shooter pawn.
+
+Assets identified as likely correct gameplay shooter pawn setup:
+- PawnData:
+  - `/ShooterCore/Game/HeroData_ShooterGame`
+  - file: `Plugins/GameFeatures/ShooterCore/Content/Game/HeroData_ShooterGame.uasset`
+- PawnClass:
+  - `/ShooterCore/Game/B_Hero_ShooterMannequin`
+  - file: `Plugins/GameFeatures/ShooterCore/Content/Game/B_Hero_ShooterMannequin.uasset`
+
+Advice given:
+- For gameplay, use shooter experience and shooter hero data.
+- Do not let gameplay run on `DefaultPawnData_EmptyPawn` if you want valid shooter behavior.
+
+---
+
+## Turn 16
+**User:**
+`tim cho toi loi nay`
+
+**System note:**
+This turn was aborted by the user before completion.
+
+---
+
+## Turn 17
+**User:**
+`tim cho toi loi nay at least one shared on-spawn ability path no longer starts correctly, so expected interaction-style behavior can fail to come online`
+
+**Assistant response:**
+Traced shared on-spawn activation logic and found a likely root cause in the shared base ability path.
+
+Primary file identified:
+- `Source/LyraGame/AbilitySystem/Abilities/LyraGameplayAbility.cpp`
+
+Function:
+- `ULyraGameplayAbility::TryActivateAbilityOnSpawn(...)`
+
+Problematic logic identified:
+```cpp
+if (bClientShouldActivate && bServerShouldActivate)
+{
+    ASC->TryActivateAbility(Spec.Handle);
+}
+```
+
+Why this is wrong:
+- The code computes:
+  - `bClientShouldActivate`
+  - `bServerShouldActivate`
+- But requires both to be true at once.
+- In practice, many abilities satisfy one path or the other, not both simultaneously.
+- This prevents shared OnSpawn startup from firing correctly.
+
+Supporting evidence:
+- `ULyraGameplayAbility_Interact` is an interaction-style ability.
+- In `Source/LyraGame/Interaction/Abilities/LyraGameplayAbility_Interact.cpp` its constructor sets:
+  - `ActivationPolicy = ELyraAbilityActivationPolicy::OnSpawn;`
+  - `NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;`
+- Therefore it depends on this shared base startup path.
+
+Also traced where on-spawn activation is triggered:
+- `ULyraGameplayAbility::OnGiveAbility(...)` calls `TryActivateAbilityOnSpawn(...)`
+- `ULyraAbilitySystemComponent::InitAbilityActorInfo(...)` calls `TryActivateAbilitiesOnSpawn()`
+- `ULyraAbilitySystemComponent::TryActivateAbilitiesOnSpawn()` in turn calls `LyraAbilityCDO->TryActivateAbilityOnSpawn(...)`
+
+Likely intended fix suggested:
+```cpp
+if (bClientShouldActivate || bServerShouldActivate)
+{
+    ASC->TryActivateAbility(Spec.Handle);
+}
+```
+
+This was identified as the likely root cause for the regression:
+"at least one shared on-spawn ability path no longer starts correctly, so expected interaction-style behavior can fail to come online"
+
+---
+
+## Turn 18
+**User:**
+`write this chat session history to D:\sipher-live-coding-test`
+
+**Assistant response / action taken:**
+Wrote a shorter summary version of the session to:
+- `D:\sipher-live-coding-test\chat_session_history.txt`
+
+Then confirmed completion.
+
+---
+
+## Turn 19
+**User:**
+`make sure to keep the verbosity, dont shorten. I need full info`
+
+**Assistant response / action taken:**
+Explained that the previous file had been summarized too aggressively and that a more verbose export would be written.
+
+This full-detail file was then written to:
+- `D:\sipher-live-coding-test\chat_session_history_full.txt`
+
+---
+
+## Additional technical findings that were explicitly surfaced during the session
+
+1. **Frontend location**
+   - Frontend map: `/Game/System/FrontEnd/Maps/L_LyraFrontEnd`
+   - Frontend experience: `B_LyraFrontEnd_Experience`
+
+2. **Gameplay map**
+   - Main gameplay map for testing: `/ShooterMaps/Maps/L_Expanse`
+   - Secondary focused combat map: `/ShooterMaps/Maps/L_FiringRange_WP`
+
+3. **Input bug likely root cause**
+   - File: `Source/LyraGame/Character/LyraHeroComponent.cpp`
+   - Function: `AddAdditionalInputConfig`
+   - Problem: pressed and released both bound to Released callback.
+
+4. **Game-feature ability grant bug likely root cause**
+   - File: `Source/LyraGame/GameFeatures/GameFeatureAction_AddAbilities.cpp`
+   - Function: `HandleActorExtension`
+   - Problem: impossible `&&` event-name condition.
+
+5. **Hit confirmation bug likely root cause**
+   - File: `Source/LyraGame/Weapons/LyraWeaponStateComponent.cpp`
+   - Function: `ClientConfirmTargetData_Implementation`
+   - Problem: mismatch between server hit-replace indexing and client-side success-only indexing.
+
+6. **First weapon pickup equip bug likely root cause**
+   - File: `Source/LyraGame/Equipment/LyraQuickBarComponent.cpp`
+   - Function: `AddItemToSlot`
+   - Problem: sets active slot before item is actually inserted into the slot.
+
+7. **Heal gameplay effect bug likely root cause**
+   - File: `Source/LyraGame/AbilitySystem/Executions/LyraHealExecution.cpp`
+   - Function: `Execute_Implementation`
+   - Problem: uses `FMath::Min(0.0f, BaseHeal)` instead of `FMath::Max(0.0f, BaseHeal)`.
+
+8. **On-spawn shared ability startup bug likely root cause**
+   - File: `Source/LyraGame/AbilitySystem/Abilities/LyraGameplayAbility.cpp`
+   - Function: `TryActivateAbilityOnSpawn`
+   - Problem: requires both client and server startup flags via `&&` instead of allowing either path.
+
+9. **Gameplay pawn guidance**
+   - Avoid relying on `DefaultPawnData_EmptyPawn` for gameplay validation.
+   - Use shooter gameplay PawnData / PawnClass:
+     - `HeroData_ShooterGame`
+     - `B_Hero_ShooterMannequin`
+
+---
+
+## Files created during export
+- `D:\sipher-live-coding-test\chat_session_history.txt`  (short summary export)
+- `D:\sipher-live-coding-test\chat_session_history_full.txt` (this more detailed export)
+
+---
+
+End of exported session history.
+

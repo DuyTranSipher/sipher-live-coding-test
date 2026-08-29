@@ -75,9 +75,30 @@ void ULyraWeaponStateComponent::ClientConfirmTargetData_Implementation(uint16 Un
 				UWorld* World = GetWorld();
 				bool bFoundShowAsSuccessHit = false;
 
-				int32 HitLocationIndex = 0;
-				for (const FLyraScreenSpaceHitLocation& Entry : Batch.Markers)
+				//int32 HitLocationIndex = 0;
+				//for (const FLyraScreenSpaceHitLocation& Entry : Batch.Markers)
+				//{
+				//	if (!HitReplaces.Contains(HitLocationIndex) && Entry.bShowAsSuccess)
+				//	{
+				//		// Only need to do this once
+				//		if (!bFoundShowAsSuccessHit)
+				//		{
+				//			ActuallyUpdateDamageInstigatedTime();
+				//		}
+
+				//		bFoundShowAsSuccessHit = true;
+
+				//		LastWeaponDamageScreenLocations.Add(Entry);
+				//	}
+				//	if (Entry.bShowAsSuccess)
+				//	{
+				//		++HitLocationIndex;
+				//	}
+				//}
+
+				for (int32 HitLocationIndex = 0; HitLocationIndex < Batch.Markers.Num(); ++HitLocationIndex)
 				{
+					const FLyraScreenSpaceHitLocation& Entry = Batch.Markers[HitLocationIndex];
 					if (!HitReplaces.Contains(HitLocationIndex) && Entry.bShowAsSuccess)
 					{
 						// Only need to do this once
@@ -89,10 +110,6 @@ void ULyraWeaponStateComponent::ClientConfirmTargetData_Implementation(uint16 Un
 						bFoundShowAsSuccessHit = true;
 
 						LastWeaponDamageScreenLocations.Add(Entry);
-					}
-					if (Entry.bShowAsSuccess)
-					{
-						++HitLocationIndex;
 					}
 				}
 			}
